@@ -5,6 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "install": "apt-get update && apt-get install -y chromium-browser",
     "start": "nodemon index.js"
   },
   "author": "",
