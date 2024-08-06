@@ -1,4 +1,3 @@
-
 // import multer from 'multer';
 // import puppeteer from 'puppeteer';
 // import path from 'path';
@@ -18,13 +17,14 @@
 
 // const generateOgImage = async (req, res) => {
 //   const { title, content } = req.body;
-//   const imagePath = req.file ? `https://sde-server.onrender.com/uploads/${req.file.filename}` : null;
+//   const imagePath = req.file ? `http://localhost:3002/uploads/${req.file.filename}` : null;
 
 //   try {
 //     const browser = await puppeteer.launch();
 //     const page = await browser.newPage();
 
-//     const contentSnippet = content.length > 180 ? content.substring(0, 180) + '...' : content;
+//     // Adjust content snippet length based on available space
+//     const contentSnippet = content.length > 150 ? content.substring(0, 150) + '...' : content;
 
 //     await page.setContent(`
 //       <html>
@@ -43,7 +43,6 @@
 //               border: 1px solid #ddd;
 //               box-sizing: border-box;
 //               background-color: #fff;
-//               overflow: hidden;
 //             }
 //             .container {
 //               width: 100%;
@@ -56,12 +55,10 @@
 //               box-sizing: border-box;
 //             }
 //             .title {
-//               font-size: 32px;
+//               font-size: 35px;
 //               font-weight: bold;
 //               margin-bottom: 20px;
 //               word-wrap: break-word;
-//               overflow: hidden;
-//               text-overflow: ellipsis;
 //             }
 //             .content {
 //               font-size: 24px;
@@ -93,16 +90,6 @@
 //       </html>
 //     `);
 
-//     // Adjust the font size to fit the title within the container
-//     await page.evaluate(() => {
-//       const titleElement = document.querySelector('.title');
-//       let fontSize = 32;
-//       while (titleElement.scrollHeight > titleElement.offsetHeight && fontSize > 12) {
-//         fontSize -= 2;
-//         titleElement.style.fontSize = `${fontSize}px`;
-//       }
-//     });
-
 //     const ogImagePath = `uploads/og-image-${Date.now()}.png`;
 //     await page.setViewport({ width: 1200, height: 630 });
 //     await page.screenshot({ path: ogImagePath });
@@ -112,13 +99,13 @@
 //       title,
 //       content,
 //       imageUrl: imagePath,
-//       ogImageUrl: `https://sde-server.onrender.com/${ogImagePath}`
+//       ogImageUrl: `http://localhost:3002/${ogImagePath}`
 //     });
 
 //     await post.save();
 
 //     res.json({ 
-//       ogImageUrl: `https://sde-server.onrender.com/${ogImagePath}`,
+//       ogImageUrl: `http://localhost:3002/${ogImagePath}`,
 //       imageUrl: imagePath // Include the original image URL in the response
 //     });
 //   } catch (error) {
@@ -133,7 +120,6 @@ import puppeteer from 'puppeteer';
 import path from 'path';
 import fs from 'fs';
 import Post from '../models/imagemodel.js';
-import express from 'express';
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -148,12 +134,12 @@ if (!fs.existsSync('uploads')) {
 
 const generateOgImage = async (req, res) => {
   const { title, content } = req.body;
-  const imagePath = req.file ? `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}` : null;
+  // const imagePath = req.file ? `http://localhost:3002/uploads/${req.file.filename}` : null;
+  const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+
 
   try {
-    const browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
+    const browser = await puppeteer.launch();
     const page = await browser.newPage();
 
     const contentSnippet = content.length > 180 ? content.substring(0, 180) + '...' : content;
@@ -244,13 +230,17 @@ const generateOgImage = async (req, res) => {
       title,
       content,
       imageUrl: imagePath,
-      ogImageUrl: `${req.protocol}://${req.get('host')}/${ogImagePath}`
+      // ogImageUrl: `http://localhost:3002/${ogImagePath}`
+      ogImageUrl: `/${ogImagePath}`
+
     });
 
     await post.save();
 
     res.json({ 
-      ogImageUrl: `${req.protocol}://${req.get('host')}/${ogImagePath}`,
+      // ogImageUrl: `http://localhost:3002/${ogImagePath}`,
+      ogImageUrl: `/${ogImagePath}`,
+
       imageUrl: imagePath // Include the original image URL in the response
     });
   } catch (error) {
@@ -258,7 +248,5 @@ const generateOgImage = async (req, res) => {
     res.status(500).json({ error: 'Failed to generate OG image' });
   }
 };
-
-
 
 export { generateOgImage, upload };
